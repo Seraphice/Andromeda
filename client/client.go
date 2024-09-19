@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"fmt"
 	"math/big"
 	"os"
 	"os/exec"
@@ -20,6 +21,7 @@ func init() {
 	golog.SetTimeFormat(`2006/01/02 15:04:05`)
 
 	if len(strings.Trim(config.ConfigBuffer, "\x19")) == 0 {
+		fmt.Println(`config file is empty!`)
 		os.Exit(0)
 		return
 	}
@@ -27,27 +29,34 @@ func init() {
 	// Convert first 2 bytes to int, which is the length of the encrypted config.
 	dataLen := int(big.NewInt(0).SetBytes([]byte(config.ConfigBuffer[:2])).Uint64())
 	if dataLen > len(config.ConfigBuffer)-2 {
+		fmt.Println(`config file is corrupted!`)
 		os.Exit(1)
 		return
 	}
 	cfgBytes := utils.StringToBytes(config.ConfigBuffer, 2, 2+dataLen)
 	cfgBytes, err := decrypt(cfgBytes[16:], cfgBytes[:16])
 	if err != nil {
+		fmt.Println("cfgBytes err：", err)
 		os.Exit(1)
 		return
 	}
 	err = utils.JSON.Unmarshal(cfgBytes, &config.Config)
 	if err != nil {
+		fmt.Println("JSON Unmarshal err：", err)
 		os.Exit(1)
 		return
 	}
 	if strings.HasSuffix(config.Config.Path, `/`) {
 		config.Config.Path = config.Config.Path[:len(config.Config.Path)-1]
 	}
+
+	fmt.Println("succeed！")
 }
 
 func main() {
+	fmt.Println("update staring...")
 	update()
+	fmt.Println("update() func finished..")
 	core.Start()
 }
 

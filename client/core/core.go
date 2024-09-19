@@ -7,6 +7,7 @@ import (
 	"Spark/utils"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
@@ -27,6 +28,7 @@ var (
 )
 
 func Start() {
+	fmt.Println("client start")
 	for !stop {
 		var err error
 		if common.WSConn != nil {
